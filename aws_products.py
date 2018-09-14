@@ -18,28 +18,17 @@ PAGE = get(AWS_URL + '/products')
 
 TREE = html.fromstring(PAGE.content)
 
-# Get Categories and corresponding data-ids
 CATEGORY_IDS = {}
-for wrapper in TREE.xpath('//div[@id="aws-nav-flyout-2-products"]'):
-    categories = wrapper.findall('div/div/a')
-    for category in categories:
-        text = quotes(category.text)
-        data_link = category.get('data-flyout')
-        CATEGORY_IDS[text] = data_link
-        # print (text, data_link)
 
 # Parse the sections for each category
-for category in CATEGORY_IDS.keys():
+for section in TREE.xpath('//*[contains(@class, "lb-item-wrapper")]'):
+    category = quotes(section.find('a/span').text)
     # print(category)
     OUTPUT[category] = {}
-    for service in TREE.xpath('//div[@id="' + CATEGORY_IDS[category] + '"]/div/div[@class="aws-link"]/a'):
-        if service.find('span') is None:
-            continue
+    for service in section.findall('div/div/a'):
         service_name = quotes(service.text)
         service_desc = quotes(service.find('span').text)
-        service_link = service.get('href')
-        if AWS_URL not in service_link:
-            service_link = AWS_URL + service_link
+        service_link = AWS_URL + service.get('href')
         OUTPUT[category][service_name] = service_desc + ',' + quotes(service_link)
         # print(category, service_name, service_desc, service_link)
 
