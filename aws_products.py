@@ -41,10 +41,9 @@ def join_quoted_values(headings, dict_item):
 
 
 def main():
-    aws_url = 'https://aws.amazon.com'
     headings = ["Category", "Service", "Description", "Link"]
     products_page = ProductsPage(
-        aws_url=aws_url,
+        aws_url='https://aws.amazon.com',
         products_page='/products'
     )
     output_dict = products_page.parse_products_page()
