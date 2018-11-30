@@ -1,39 +1,77 @@
+from pathlib import Path
 from requests import get
 from lxml import html
-from pathlib import Path
 
-def quotes(instr):
-    return '"{}"'.format(instr.strip())
 
-HEADER = [','.join(["Category", "AWS Service", "Description", "Link"])]
-OUTPUT = {}
+class ProductsPage:
+    def __init__(self, opts):
+        self.aws_url = opts['aws_url']
+        self.products_url = self.aws_url + opts['products_page']
+        self.use_cached_content = opts.get('use_cached_content', False)
+        self.cache_location = Path('.products_page_cache.html')
 
-AWS_URL = 'https://aws.amazon.com'
-PAGE = get(AWS_URL + '/products')
+    def url_content(self):
+        return get(self.products_url).content
 
-# Cache it in a local file
-# local_cache = Path('localcache.html')
-# local_cache.write_bytes(PAGE.content)
-# TREE = html.fromstring(local_cache.read_text())
+    def get_page_text(self):
+        if self.use_cached_content:
+            if self.cache_location.exists():
+                return self.cache_location.read_text()
+        if self.use_cached_content:
+            return self.save_page_to_cache()
+        return self.url_content()
 
-TREE = html.fromstring(PAGE.content)
+    def save_page_to_cache(self):
+        page_contents = self.url_content()
+        self.cache_location.write_bytes(page_contents)
+        return page_contents
 
-CATEGORY_IDS = {}
+    def parse_products_page(self):
+        html_obj = html.fromstring(self.get_page_text())
+        output = {}
+        # Parse the sections for each category
+        sections = html_obj.xpath('//*[contains(@class, "lb-item-wrapper")]')
+        for section in sections:
+            category = section.find('a/span').text
+            # print(category)
+            output[category] = {}
+            # get details for each service in this category
+            for svc in section.findall('div/div/a'):
+                service = svc.text
+                output[category][service] = {
+                    'Category': category,
+                    'Service': service,
+                    'Description': svc.find('span').text,
+                    'Link': self.aws_url + svc.get('href')
+                }
+                # print(output[category][service])
+        return output
 
-# Parse the sections for each category
-for section in TREE.xpath('//*[contains(@class, "lb-item-wrapper")]'):
-    category = quotes(section.find('a/span').text)
-    # print(category)
-    OUTPUT[category] = {}
-    for service in section.findall('div/div/a'):
-        service_name = quotes(service.text)
-        service_desc = quotes(service.find('span').text)
-        service_link = AWS_URL + service.get('href')
-        OUTPUT[category][service_name] = service_desc + ',' + quotes(service_link)
-        # print(category, service_name, service_desc, service_link)
 
-# Print output
-print("\n".join(HEADER))
-for category in OUTPUT:
-    for service in sorted(OUTPUT[category].keys()):
-        print(','.join([category, service, OUTPUT[category][service]]))
+def join_quoted_values(headings, dict_item):
+    values = []
+    for heading in headings:
+        # remove blanks before and after, enclose in quotes
+        values.append('"' + dict_item[heading].strip() + '"')
+    return ','.join(values)
+
+
+def main():
+    aws_url = 'https://aws.amazon.com'
+    headings = ["Category", "Service", "Description", "Link"]
+    products_page = ProductsPage({
+        'aws_url': aws_url,
+        'products_page': '/products',
+        'use_cached_content': True
+    })
+    output_dict = products_page.parse_products_page()
+
+    # Print output
+    print(",".join(list(map(lambda x: '"' + x + '"', headings))))
+    for category in output_dict:
+        for svc in sorted(output_dict[category].keys()):
+            print(join_quoted_values(headings, output_dict[category][svc]))
+
+
+if __name__ == '__main__':
+    main()
