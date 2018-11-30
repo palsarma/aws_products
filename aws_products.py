@@ -5,9 +5,9 @@ from lxml import html
 
 
 class ProductsPage:
-    def __init__(self, opts):
-        self.aws_url = opts['aws_url']
-        self.products_url = self.aws_url + opts['products_page']
+    def __init__(self, aws_url, products_page):
+        self.aws_url = aws_url
+        self.products_url = self.aws_url + products_page
 
     def products_page_content(self):
         return get(self.products_url).content
@@ -43,10 +43,10 @@ def join_quoted_values(headings, dict_item):
 def main():
     aws_url = 'https://aws.amazon.com'
     headings = ["Category", "Service", "Description", "Link"]
-    products_page = ProductsPage({
-        'aws_url': aws_url,
-        'products_page': '/products'
-    })
+    products_page = ProductsPage(
+        aws_url=aws_url,
+        products_page='/products'
+    )
     output_dict = products_page.parse_products_page()
 
     # Print output
