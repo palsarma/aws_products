@@ -29,16 +29,17 @@ class ProductsPage:
         sections = html_obj.xpath('//*[contains(@class, "lb-item-wrapper")]')
         for section in sections:
             category = section.find('a/span').text.strip()
-            services = []
+            products = []
             # get details for each service in this category
             for svc in section.findall('div/div/a'):
-                services.append({
+                products.append({
                     'Category':     category,
-                    'Service':      svc.text.strip(),
+                    'Product':      svc.text.strip(),
                     'Description':  svc.find('span').text.strip(),
                     'Link':         self.aws_url + svc.get('href').strip()
                 })
-            output += sorted(services, key=lambda x: x['Service'])
+            # Sort the products in this category by Product Name
+            output += sorted(products, key=lambda x: x['Product'])
         return output
 
 def main():
@@ -51,7 +52,11 @@ def main():
 
     # Print output
     quotify = lambda x: '"' + x + '"'
+
+    # Print header - keys of first time
     print(','.join(map(quotify, products_list[0].keys())))
+
+    # Print products
     for product in products_list:
         print(','.join(map(quotify, product.values())))
 

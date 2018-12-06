@@ -1,4 +1,4 @@
-"Category","Service","Description","Link"
+"Category","Product","Description","Link"
 "Compute","AWS Batch","Run Batch Jobs at Any Scale","https://aws.amazon.com/batch/?c=1&pt=7"
 "Compute","AWS Elastic Beanstalk","Run and Manage Web Apps","https://aws.amazon.com/elasticbeanstalk/?c=1&pt=8"
 "Compute","AWS Fargate","Run Containers without Managing Servers or Clusters","https://aws.amazon.com/fargate/?c=1&pt=9"
